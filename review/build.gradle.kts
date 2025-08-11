@@ -1,8 +1,11 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("maven-publish")
 }
 
 android {
@@ -11,6 +14,62 @@ android {
 
     buildFeatures {
         viewBinding = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        compose = true
+    }
+}
+
+val sourceJar by tasks.registering(Jar::class) {
+    from(android.sourceSets["main"].java.srcDirs)
+    archiveClassifier.set("sources")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.shiragin"
+            artifactId = "review"
+            version = "0.0.2"
+
+            artifact(sourceJar.get())
+            artifact("$buildDir/outputs/aar/review-release.aar")
+
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+
+                project.configurations.getByName("implementation").allDependencies.forEach {
+                    // Note: The Groovy condition had a bug: 'if (it.group != null || ... ) return' prevents adding deps with valid info.
+                    // Assuming you want to skip dependencies that have null group or name or version or name == "unspecified"
+                    if (it.group == null || it.version == null || it.name == "unspecified") return@forEach
+
+                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", it.group)
+                    dependencyNode.appendNode("artifactId", it.name)
+                    dependencyNode.appendNode("version", it.version)
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            val propsFile = rootProject.file("github.properties")
+            val props = Properties().apply {
+                load(propsFile.inputStream())
+            }
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/sajjad-dehnavi/Reviewer-App")
+            credentials {
+                username = props["username"] as String
+                password = props["token"] as String
+            }
+        }
     }
 }
 

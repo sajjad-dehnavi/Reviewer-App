@@ -17,7 +17,6 @@ import com.shiragin.libraries.review.internet.api.ConfigApi
 import com.shiragin.libraries.review.internet.apiCall
 import com.shiragin.libraries.review.internet.model.MarketConfig
 import com.shiragin.libraries.review.internet.model.ServerConfig
-import com.shiragin.libraries.review.internet.model.Settings
 import com.shiragin.libraries.review.internet.model.Versioning
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +25,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 object DataManager {
 
@@ -150,7 +150,17 @@ object DataManager {
 
     suspend fun getVersioning(): Versioning = getServerConfig().versioning
 
-    suspend fun getSettings(): Settings = getServerConfig().settings
+    suspend inline fun <reified T> getSettings(): T? {
+        val json = getServerConfig().settings
+        return try {
+            val decoder = Json {
+                ignoreUnknownKeys = true
+            }
+            decoder.decodeFromString(decoder.serializersModule.serializer(), json.toString())
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     fun getMarketUrl(): String = marketUrl
 

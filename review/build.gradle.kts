@@ -21,6 +21,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     buildFeatures {
         compose = true
     }
@@ -36,7 +40,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.shiragin"
             artifactId = "review"
-            version = "0.0.2"
+            version = "0.0.1"
 
             artifact(sourceJar.get())
             artifact("$buildDir/outputs/aar/review-release.aar")

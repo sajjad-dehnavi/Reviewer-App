@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.serializer
 
 object DataManager {
@@ -151,13 +153,12 @@ object DataManager {
     suspend fun getVersioning(): Versioning = getServerConfig().versioning
 
     suspend inline fun <reified T> getSettings(): T? {
-        val json = getServerConfig().settings
+        val settingsJsonObject: JsonObject = getServerConfig().settings ?: return null
         return try {
-            val decoder = Json {
-                ignoreUnknownKeys = true
-            }
-            decoder.decodeFromString(decoder.serializersModule.serializer(), json.toString())
-        } catch (_: Exception) {
+            val decoder = Json { ignoreUnknownKeys = true }
+            decoder.decodeFromJsonElement<T>(settingsJsonObject)
+        } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }

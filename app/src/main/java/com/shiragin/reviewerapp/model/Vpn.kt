@@ -1,4 +1,4 @@
-package com.shiragin.review.model
+package com.shiragin.reviewerapp.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

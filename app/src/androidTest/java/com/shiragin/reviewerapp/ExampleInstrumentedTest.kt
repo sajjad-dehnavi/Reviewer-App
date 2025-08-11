@@ -1,4 +1,4 @@
-package com.shiragin.review
+package com.shiragin.reviewerapp
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

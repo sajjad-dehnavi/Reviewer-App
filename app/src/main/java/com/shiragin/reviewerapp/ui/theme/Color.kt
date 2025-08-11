@@ -1,4 +1,4 @@
-package com.shiragin.review.ui.theme
+package com.shiragin.reviewerapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

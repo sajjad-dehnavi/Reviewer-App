@@ -1,4 +1,4 @@
-package com.shiragin.review
+package com.shiragin.reviewerapp
 
 import org.junit.Test
 

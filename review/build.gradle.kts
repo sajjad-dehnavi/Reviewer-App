@@ -71,6 +71,7 @@ publishing {
             url = uri("https://maven.pkg.github.com/sajjad-dehnavi/Reviewer-App")
             credentials {
                 username = System.getenv("GITHUB_USER") ?: ""
+                println("Password: ${System.getenv("GITHUB_PASS")}")
                 password = System.getenv("GITHUB_PASS") ?: ""
             }
         }

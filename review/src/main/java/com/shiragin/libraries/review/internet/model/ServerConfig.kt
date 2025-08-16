@@ -16,5 +16,12 @@ data class ServerConfig(
     val market: Market = Market.DEFAULT,
 
     @SerialName("versioning")
-    val versioning: Versioning = Versioning.DEFAULT
+    val versioning: Versioning = Versioning.DEFAULT,
+
+    @SerialName("vpn")
+    val vpn: Vpn = Vpn.DEFAULT,
+
+    @SerialName("ads")
+    val ads: Ads = Ads.DEFAULT,
+
 )

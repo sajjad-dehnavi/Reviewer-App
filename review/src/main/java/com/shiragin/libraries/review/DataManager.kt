@@ -15,9 +15,11 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.shiragin.libraries.review.internet.RetrofitClient
 import com.shiragin.libraries.review.internet.api.ConfigApi
 import com.shiragin.libraries.review.internet.apiCall
+import com.shiragin.libraries.review.internet.model.Ads
 import com.shiragin.libraries.review.internet.model.MarketConfig
 import com.shiragin.libraries.review.internet.model.ServerConfig
 import com.shiragin.libraries.review.internet.model.Versioning
+import com.shiragin.libraries.review.internet.model.Vpn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -151,6 +153,10 @@ object DataManager {
     suspend fun setIgnoreVpn(ignore: Boolean) = savePreference(KEY_IGNORE_VPN, ignore)
 
     suspend fun getVersioning(): Versioning = getServerConfig().versioning
+
+    suspend fun getAds() : Ads = getServerConfig().ads
+
+    suspend fun getVpn(): Vpn = getServerConfig().vpn
 
     suspend inline fun <reified T> getSettings(): T? {
         val settingsJsonObject: JsonObject = getServerConfig().settings ?: return null

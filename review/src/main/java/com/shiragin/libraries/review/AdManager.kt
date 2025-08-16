@@ -366,7 +366,7 @@ object AdManager {
     ) {
         TapsellPlus.requestRewardedVideoAd(activity, id, object : AdRequestCallback() {
             override fun response(model: TapsellPlusAdModel) {
-                if (!activity.isDesroyed) showTapsell(activity, model, onEarned, onClose, onError)
+                if (!activity.isDestroyed) showTapsell(activity, model, onEarned, onClose, onError)
             }
 
             override fun error(msg: String) =

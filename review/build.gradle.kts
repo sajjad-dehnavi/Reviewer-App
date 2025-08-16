@@ -44,7 +44,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.shiragin"
             artifactId = "review"
-            version = "0.0.8"
+            version = "0.0.9"
 
             artifact(sourceJar.get())
             artifact("$buildDir/outputs/aar/review-release.aar")

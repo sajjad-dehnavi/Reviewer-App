@@ -12,6 +12,10 @@ android {
     compileSdk = 36
     namespace = "com.shiragin.review"
 
+    defaultConfig {
+        minSdk = 21
+    }
+
     buildFeatures {
         viewBinding = true
     }
@@ -40,7 +44,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.shiragin"
             artifactId = "review"
-            version = "0.0.1"
+            version = "0.0.8"
 
             artifact(sourceJar.get())
             artifact("$buildDir/outputs/aar/review-release.aar")
@@ -63,15 +67,11 @@ publishing {
     }
     repositories {
         maven {
-            val propsFile = rootProject.file("github.properties")
-            val props = Properties().apply {
-                load(propsFile.inputStream())
-            }
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/sajjad-dehnavi/Reviewer-App")
             credentials {
-                username = props["username"] as String
-                password = props["token"] as String
+                username = System.getenv("GITHUB_USER") ?: ""
+                password = System.getenv("GITHUB_PASS") ?: ""
             }
         }
     }

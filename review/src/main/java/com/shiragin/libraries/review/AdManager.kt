@@ -12,6 +12,8 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
@@ -75,7 +77,7 @@ object AdManager {
     }
 
     // ---------------- Public API ----------------
-    fun requestInterstitialAd(
+    fun requestRewardedInterstitialAd(
         activity: Activity,
         admobId: String,
         onStart: () -> Unit,
@@ -83,7 +85,18 @@ object AdManager {
         onError: (Exception) -> Unit
     ) = mainScope.launch {
         onStart()
-        checkCountryAndLoad(activity, admobId, onLoaded, onError)
+        checkCountryAndLoadRewardedInterstitial(activity, admobId, onLoaded, onError)
+    }
+
+    fun requestInterstitialAd(
+        activity: Activity,
+        admobId: String,
+        onStart: () -> Unit,
+        onLoaded: (InterstitialAd) -> Unit,
+        onError: (Exception) -> Unit
+    ) = mainScope.launch {
+        onStart()
+        checkCountryAndLoadInterstitial(activity, admobId, onLoaded, onError)
     }
 
     fun requestRewardAd(
@@ -112,8 +125,27 @@ object AdManager {
 
                 when {
                     ip.isIran && market.isHardVpnIfIran && !ignoreVpn -> onVpnNeeded()
-                    ip.isIran && !market.isHardVpnIfIran -> loadTapsellIfAllowed(activity, tapsellId, market, onEarned, onError, onClose)
-                    else -> loadNonIranAds(activity, admobId, tapsellId, market, ignoreVpn, iranLocated, onEarned, onTurnOffVpn, onError, onClose)
+                    ip.isIran && !market.isHardVpnIfIran -> loadTapsellIfAllowed(
+                        activity,
+                        tapsellId,
+                        market,
+                        onEarned,
+                        onError,
+                        onClose
+                    )
+
+                    else -> loadNonIranAds(
+                        activity,
+                        admobId,
+                        tapsellId,
+                        market,
+                        ignoreVpn,
+                        iranLocated,
+                        onEarned,
+                        onTurnOffVpn,
+                        onError,
+                        onClose
+                    )
                 }
             },
             onError = { err ->
@@ -126,10 +158,29 @@ object AdManager {
 
     // ---------------- Private helpers ----------------
 
-    private suspend fun checkCountryAndLoad(
+    private suspend fun checkCountryAndLoadRewardedInterstitial(
         activity: Activity,
         admobId: String,
         onLoaded: (RewardedInterstitialAd) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        apiCall(
+            context = activity,
+            block = { configApi.getIp() },
+            onSuccess = { ip ->
+                if (!ip.isIran) {
+                    DataManager.setUserLocatedAtIran()
+                    loadAdmobRewardedInterstitial(activity, admobId, onLoaded, onError)
+                } else onError(Exception("country is iran"))
+            },
+            onError = { loadAdmobRewardedInterstitial(activity, admobId, onLoaded, onError) }
+        )
+    }
+
+    private suspend fun checkCountryAndLoadInterstitial(
+        activity: Activity,
+        admobId: String,
+        onLoaded: (InterstitialAd) -> Unit,
         onError: (Exception) -> Unit
     ) {
         apiCall(
@@ -145,7 +196,8 @@ object AdManager {
         )
     }
 
-    private fun loadAdmobInterstitial(
+
+    private fun loadAdmobRewardedInterstitial(
         activity: Activity,
         id: String,
         onLoaded: (RewardedInterstitialAd) -> Unit,
@@ -159,6 +211,22 @@ object AdManager {
             }
         )
     }
+
+    private fun loadAdmobInterstitial(
+        activity: Activity,
+        id: String,
+        onLoaded: (InterstitialAd) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        InterstitialAd.load(
+            activity, id, AdRequest.Builder().build(),
+            object : InterstitialAdLoadCallback() {
+                override fun onAdFailedToLoad(err: LoadAdError) = onError(Exception(err.message))
+                override fun onAdLoaded(ad: InterstitialAd) = onLoaded(ad)
+            }
+        )
+    }
+
 
     private fun loadTapsellIfAllowed(
         activity: Activity,
@@ -185,7 +253,14 @@ object AdManager {
         onError: (Exception) -> Unit,
         onClose: (Boolean) -> Unit
     ) {
-        if (!market.isShowAdmob) return loadTapsellIfAllowed(activity, tapsellId, market, onEarned, onError, onClose)
+        if (!market.isShowAdmob) return loadTapsellIfAllowed(
+            activity,
+            tapsellId,
+            market,
+            onEarned,
+            onError,
+            onClose
+        )
 
         requestAdmob(
             activity = activity,
@@ -225,9 +300,16 @@ object AdManager {
     ) {
         when {
             market.isShowAdmob -> requestAdmob(activity, admobId, onEarned, onClose) {
-                if (market.isShowTapsell) requestTapsell(activity, tapsellId, onEarned, onError, onClose)
+                if (market.isShowTapsell) requestTapsell(
+                    activity,
+                    tapsellId,
+                    onEarned,
+                    onError,
+                    onClose
+                )
                 else onError(it)
             }
+
             market.isShowTapsell -> requestTapsell(activity, tapsellId, onEarned, onError, onClose)
             else -> onError(Exception("No ad network available"))
         }
@@ -245,8 +327,11 @@ object AdManager {
         RewardedAd.load(
             activity, id, AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
-                override fun onAdFailedToLoad(err: LoadAdError) = onError(Exception("fail_load_admob_${err.message}"))
-                override fun onAdLoaded(ad: RewardedAd) = showAdmob(activity, ad, onEarned, onClose, onError)
+                override fun onAdFailedToLoad(err: LoadAdError) =
+                    onError(Exception("fail_load_admob_${err.message}"))
+
+                override fun onAdLoaded(ad: RewardedAd) =
+                    showAdmob(activity, ad, onEarned, onClose, onError)
             }
         )
     }
@@ -261,7 +346,8 @@ object AdManager {
         var rewarded = false
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() = onClose(rewarded)
-            override fun onAdFailedToShowFullScreenContent(err: AdError) = onError(Exception("fail_show_admob_${err.message}"))
+            override fun onAdFailedToShowFullScreenContent(err: AdError) =
+                onError(Exception("fail_show_admob_${err.message}"))
         }
         ad.show(activity) {
             rewarded = true
@@ -282,7 +368,9 @@ object AdManager {
             override fun response(model: TapsellPlusAdModel) {
                 if (!activity.isDestroyed) showTapsell(activity, model, onEarned, onClose, onError)
             }
-            override fun error(msg: String) = if (!activity.isDestroyed) onError(Exception("fail_load_tapsell_$msg")) else Unit
+
+            override fun error(msg: String) =
+                if (!activity.isDestroyed) onError(Exception("fail_load_tapsell_$msg")) else Unit
         })
     }
 
@@ -296,8 +384,12 @@ object AdManager {
         var rewarded = false
         TapsellPlus.showRewardedVideoAd(activity, model.responseId, object : AdShowListener() {
             override fun onClosed(m: TapsellPlusAdModel) = onClose(rewarded)
-            override fun onRewarded(m: TapsellPlusAdModel) { rewarded = true; onEarned("Tapsell") }
-            override fun onError(e: TapsellPlusErrorModel) = onError(Exception("fail_show_tapsell_${e.errorMessage}"))
+            override fun onRewarded(m: TapsellPlusAdModel) {
+                rewarded = true; onEarned("Tapsell")
+            }
+
+            override fun onError(e: TapsellPlusErrorModel) =
+                onError(Exception("fail_show_tapsell_${e.errorMessage}"))
         })
     }
 }

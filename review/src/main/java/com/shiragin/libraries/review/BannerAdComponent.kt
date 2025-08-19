@@ -1,12 +1,20 @@
 package com.shiragin.libraries.review
 
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -18,7 +26,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.google.android.gms.ads.AdListener
@@ -30,12 +41,15 @@ import com.shiragin.libraries.review.errors.InternetConnectionError
 import com.shiragin.libraries.review.internet.RetrofitClient
 import com.shiragin.libraries.review.internet.api.ConfigApi
 import com.shiragin.libraries.review.internet.apiCall
+import com.shiragin.libraries.review.internet.model.Ads
 import ir.tapsell.plus.AdRequestCallback
 import ir.tapsell.plus.AdShowListener
 import ir.tapsell.plus.TapsellPlus
 import ir.tapsell.plus.TapsellPlusBannerType
 import ir.tapsell.plus.model.TapsellPlusAdModel
 import ir.tapsell.plus.model.TapsellPlusErrorModel
+import androidx.core.net.toUri
+import coil.compose.AsyncImage
 
 internal sealed interface AdProvider {
     data object TAPSELL : AdProvider
@@ -231,4 +245,34 @@ private fun TapsellBannerAd(
     }
 
     AndroidView(modifier = modifier.wrapContentSize(), factory = { adView })
+}
+
+
+@Composable
+fun ShiraginBanner(
+    paddingValues: PaddingValues,
+    context: Context,
+    ads: Ads,
+) {
+    if (ads.isShow == true) {
+        AsyncImage(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxWidth()
+                .aspectRatio(ads.aspectRatio ?: 3.4f)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { ads.link?.let { context.openUrl(it) } },
+            model = ads.banner,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+        )
+    }
+}
+
+
+fun Context.openUrl(url: String) {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        data = url.toUri()
+    }
+    startActivity(intent)
 }

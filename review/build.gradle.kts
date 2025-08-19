@@ -44,7 +44,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.shiragin"
             artifactId = "review"
-            version = "0.0.10"
+            version = "0.0.11"
 
             artifact(sourceJar.get())
             artifact("$buildDir/outputs/aar/review-release.aar")
@@ -95,4 +95,5 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.coil.kt.compose)
 }

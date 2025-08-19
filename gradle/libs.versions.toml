@@ -1,13 +1,13 @@
 [versions]
 agp = "8.12.0"
 kotlin = "2.2.0"
-coreKtx = "1.16.0"
+coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.9.2"
 activityCompose = "1.10.1"
-composeBom = "2025.07.00"
+composeBom = "2025.08.00"
 
 
 playServicesAds = "24.5.0"
@@ -19,7 +19,7 @@ okhttp = "5.1.0"
 retrofit = "3.0.0"
 retrofitKotlinxSerializationJson = "1.0.0"
 reviewKtx = "2.0.2"
-
+coil = "2.7.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,7 +46,7 @@ okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 tapsell-plus-sdk-android = { module = "ir.tapsell.plus:tapsell-plus-sdk-android", version.ref = "tapsellPlusSdkAndroid" }
-
+coil-kt-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

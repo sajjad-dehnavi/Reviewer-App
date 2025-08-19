@@ -23,13 +23,14 @@ import com.shiragin.libraries.review.internet.model.Vpn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.serializer
 
 object DataManager {
 
@@ -144,6 +145,11 @@ object DataManager {
         return json.let { Json.decodeFromString(it) } ?: ServerConfig()
     }
 
+    fun getServerConfigFlow(): Flow<ServerConfig> {
+        val json = getPreferenceFlow(KEY_SERVER_CONFIG, "")
+        return json.map { Json.decodeFromString(it) ?: ServerConfig() }
+    }
+
     suspend fun isUserLocatedAtIran(): Boolean = getPreference(KEY_IS_IN_IRAN, false)
 
     suspend fun isIgnoreVpn(): Boolean = getPreference(KEY_IGNORE_VPN, false)
@@ -154,9 +160,15 @@ object DataManager {
 
     suspend fun getVersioning(): Versioning = getServerConfig().versioning
 
-    suspend fun getAds() : Ads = getServerConfig().ads
+    suspend fun getVersioningFlow(): Flow<Versioning> = getServerConfigFlow().map { it.versioning }
+
+    suspend fun getAds(): Ads = getServerConfig().ads
+
+    suspend fun getAdsFlow(): Flow<Ads> = getServerConfigFlow().map { it.ads }
 
     suspend fun getVpn(): Vpn = getServerConfig().vpn
+
+    suspend fun getVpnFlow(): Flow<Vpn> = getServerConfigFlow().map { it.vpn }
 
     suspend inline fun <reified T> getSettings(): T? {
         val settingsJsonObject: JsonObject = getServerConfig().settings ?: return null
@@ -166,6 +178,19 @@ object DataManager {
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    inline fun <reified T> getSettingsFlow(): Flow<T?> {
+        val settingsJsonObject: Flow<JsonObject?> = getServerConfigFlow().map { it.settings }
+        return try {
+            val decoder = Json { ignoreUnknownKeys = true }
+            settingsJsonObject.map { json ->
+                json?.let { decoder.decodeFromJsonElement<T>(it) }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            flow { null }
         }
     }
 
@@ -179,7 +204,7 @@ object DataManager {
         isMyket() -> getServerConfig().market.myket
         else -> MarketConfig.DEFAULT
     }
-    // endregion
+// endregion
 
     // region Preferences Helpers
     private fun <T> getPreferenceFlow(key: Preferences.Key<T>, default: T) =
@@ -191,5 +216,5 @@ object DataManager {
     private suspend fun <T> savePreference(key: Preferences.Key<T>, value: T) {
         dataStore.edit { it[key] = value }
     }
-    // endregion
+// endregion
 }

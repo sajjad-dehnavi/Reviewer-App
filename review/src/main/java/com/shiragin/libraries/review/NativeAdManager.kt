@@ -119,7 +119,7 @@ fun SubscribeForAd(
             }
 
             AdProvider.TAPSELL -> {
-                TapsellPlus.requestNativeVideo(context, tapsellId, object : AdRequestCallback() {
+                TapsellPlus.requestNativeAd(context, tapsellId, object : AdRequestCallback() {
                     override fun response(tapsellPlusAdModel: TapsellPlusAdModel) {
                         val tapsellStandardBannerResponseId =
                             tapsellPlusAdModel.responseId

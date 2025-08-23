@@ -142,12 +142,22 @@ object DataManager {
     // region Data Access
     suspend fun getServerConfig(): ServerConfig {
         val json = getPreference(KEY_SERVER_CONFIG, "")
-        return json.let { Json.decodeFromString(it) } ?: ServerConfig()
+        return try {
+            json.let { Json.decodeFromString(it) } ?: ServerConfig()
+        } catch (_: Exception) {
+            ServerConfig()
+        }
     }
 
     fun getServerConfigFlow(): Flow<ServerConfig> {
-        val json = getPreferenceFlow(KEY_SERVER_CONFIG, "")
-        return json.map { Json.decodeFromString(it) ?: ServerConfig() }
+        val jsonFlow = getPreferenceFlow(KEY_SERVER_CONFIG, "")
+        return jsonFlow.map { json ->
+            try {
+                Json.decodeFromString(json) ?: ServerConfig()
+            } catch (_: Exception) {
+                ServerConfig()
+            }
+        }
     }
 
     suspend fun isUserLocatedAtIran(): Boolean = getPreference(KEY_IS_IN_IRAN, false)
@@ -160,11 +170,11 @@ object DataManager {
 
     suspend fun getVersioning(): Versioning = getServerConfig().versioning
 
-    suspend fun getVersioningFlow(): Flow<Versioning> = getServerConfigFlow().map { it.versioning }
+    fun getVersioningFlow(): Flow<Versioning> = getServerConfigFlow().map { it.versioning }
 
-    suspend fun getAds(): Ads = getServerConfig().ads
+    suspend fun getAds(): List<Ads>? = getMarketConfig().ads
 
-    suspend fun getAdsFlow(): Flow<Ads> = getServerConfigFlow().map { it.ads }
+    suspend fun getAdsFlow(): Flow<List<Ads>?> = getMarketConfigFlow().map { it.ads }
 
     suspend fun getVpn(): Vpn = getServerConfig().vpn
 
@@ -203,6 +213,13 @@ object DataManager {
         isBazaar() -> getServerConfig().market.bazaar
         isMyket() -> getServerConfig().market.myket
         else -> MarketConfig.DEFAULT
+    }
+
+    fun getMarketConfigFlow(): Flow<MarketConfig> = when {
+        isGooglePlay() -> getServerConfigFlow().map { it.market.googlePlay }
+        isBazaar() -> getServerConfigFlow().map { it.market.bazaar }
+        isMyket() -> getServerConfigFlow().map { it.market.myket }
+        else -> flow { MarketConfig.DEFAULT }
     }
 // endregion
 

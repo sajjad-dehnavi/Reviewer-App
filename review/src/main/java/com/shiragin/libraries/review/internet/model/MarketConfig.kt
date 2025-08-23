@@ -20,7 +20,10 @@ data class MarketConfig(
     val isHardReview: Boolean,
 
     @SerialName("isSoftReview")
-    val isSoftReview: Boolean
+    val isSoftReview: Boolean,
+
+    @SerialName("ads")
+    val ads: List<Ads>? = null,
 ) {
     companion object {
         val DEFAULT = MarketConfig(
@@ -28,7 +31,8 @@ data class MarketConfig(
             isShowTapsell = true,
             isHardVpnIfIran = true,
             isHardReview = false,
-            isSoftReview = false
+            isSoftReview = false,
+            ads = emptyList(),
         )
     }
 }

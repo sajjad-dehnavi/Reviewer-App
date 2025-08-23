@@ -3,7 +3,6 @@ package com.shiragin.libraries.review
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
@@ -31,7 +30,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import coil.compose.AsyncImage
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -48,10 +49,8 @@ import ir.tapsell.plus.TapsellPlus
 import ir.tapsell.plus.TapsellPlusBannerType
 import ir.tapsell.plus.model.TapsellPlusAdModel
 import ir.tapsell.plus.model.TapsellPlusErrorModel
-import androidx.core.net.toUri
-import coil.compose.AsyncImage
 
-internal sealed interface AdProvider {
+sealed interface AdProvider {
     data object TAPSELL : AdProvider
     data object AdMob : AdProvider
 }

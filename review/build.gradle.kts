@@ -44,7 +44,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.shiragin"
             artifactId = "review"
-            version = "0.0.11"
+            version = "0.0.15"
 
             artifact(sourceJar.get())
             artifact("$buildDir/outputs/aar/review-release.aar")
@@ -71,7 +71,6 @@ publishing {
             url = uri("https://maven.pkg.github.com/sajjad-dehnavi/Reviewer-App")
             credentials {
                 username = System.getenv("GITHUB_USER") ?: ""
-                println("Password: ${System.getenv("GITHUB_PASS")}")
                 password = System.getenv("GITHUB_PASS") ?: ""
             }
         }
